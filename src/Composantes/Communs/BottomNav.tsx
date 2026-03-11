@@ -22,7 +22,7 @@ export const BottomNav = ({ activeTab, setActiveTab }: { activeTab: string, setA
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200/50 dark:border-slate-800/50 px-4 pb-safe pt-3 flex justify-around items-center z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)] transition-colors duration-300">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-200/50 dark:border-slate-800/50 px-4 pb-safe pt-3 flex justify-around items-center z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)] transition-colors duration-300">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (

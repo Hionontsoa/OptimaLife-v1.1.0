@@ -2,15 +2,17 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, AlertCircle, Edit2 } from 'lucide-react';
 
+import { Categorie, CategoryStat } from '../../types';
+
 interface ModalBudgetsProps {
   afficherBudgets: boolean;
   setAfficherBudgets: (a: boolean) => void;
-  categories: any[];
-  statsCategories: any[];
+  categories: Categorie[];
+  statsCategories: CategoryStat[];
   currency: string;
-  setCategorieEnEdition: (c: any) => void;
+  setCategorieEnEdition: (c: Categorie | null) => void;
   setNouveauBudget: (b: string) => void;
-  categorieEnEdition: any;
+  categorieEnEdition: Categorie | null;
   nouveauBudget: string;
   gererMiseAJourBudget: () => void;
 }

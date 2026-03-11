@@ -7,7 +7,7 @@ import { AjouterObjectif } from './AjouterObjectif';
 import { ModalDetailObjectif } from './ModalDetailObjectif';
 import { useCurrency } from '../../Context/CurrencyContext';
 import { getService } from '../../Services/serviceFactory';
-import { Objectif } from '../../types';
+import { Objectif, GoalInput } from '../../types';
 
 /**
  * Page de gestion des objectifs financiers
@@ -21,14 +21,16 @@ export const Objectifs = () => {
   const { currency } = useCurrency();
   
   const [afficherModalCreation, setAfficherModalCreation] = useState(false);
-  const [nouvelObjectif, setNouvelObjectif] = useState({ titre: '', montant_cible: '', date_limite: '', icone: 'Target' });
+  const [nouvelObjectif, setNouvelObjectif] = useState<GoalInput>({ titre: '', montant_cible: '', date_limite: '', icone: 'Target' });
 
   const recupererObjectifs = async () => {
     try {
       const donnees = await getService().obtenirObjectifs();
       setObjectifs(donnees);
+      return donnees;
     } catch (err) {
       console.error(err);
+      return [];
     }
   };
 
@@ -36,7 +38,7 @@ export const Objectifs = () => {
     try {
       await getService().supprimerObjectif(id);
       setObjectifSelectionne(null);
-      recupererObjectifs();
+      await recupererObjectifs();
     } catch (err) {
       console.error(err);
     }
@@ -44,6 +46,14 @@ export const Objectifs = () => {
 
   useEffect(() => {
     recupererObjectifs();
+
+    const subscription = getService().sabonnerAuxChangements('objectifs', () => {
+      recupererObjectifs();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const gererClicObjectif = async (goalId: number) => {
@@ -61,9 +71,9 @@ export const Objectifs = () => {
         date: new Date().toISOString().split('T')[0]
       });
       setMontantContribution('');
-      await recupererObjectifs();
+      const nouveauxObjectifs = await recupererObjectifs();
       // Met a jour l'objectif selectionne apres la contribution
-      const misAJour = objectifs.find(o => o.id === objectifSelectionne.id);
+      const misAJour = nouveauxObjectifs.find(o => o.id === objectifSelectionne.id);
       if (misAJour) setObjectifSelectionne(misAJour);
     } catch (err) {
       console.error(err);
@@ -94,20 +104,22 @@ export const Objectifs = () => {
     <div className="pb-24">
       <Header title="Objectifs" subtitle="Suivez vos reves financiers" />
       
-      <div className="px-6 space-y-4">
-        <ListeObjectifs 
-          objectifs={objectifs}
-          gererClicObjectif={gererClicObjectif}
-          currency={currency}
-        />
+      <div className="space-y-6 md:space-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ListeObjectifs 
+            objectifs={objectifs}
+            gererClicObjectif={gererClicObjectif}
+            currency={currency}
+          />
 
-        <button 
-          onClick={() => setAfficherModalCreation(true)}
-          className="w-full border-2 border-dashed border-slate-200 dark:border-slate-800 p-6 rounded-2xl text-slate-400 dark:text-slate-500 font-medium flex flex-col items-center gap-2"
-        >
-          <Target size={32} strokeWidth={1.5} />
-          Creer un nouvel objectif
-        </button>
+          <button 
+            onClick={() => setAfficherModalCreation(true)}
+            className="w-full border-2 border-dashed border-slate-200 dark:border-slate-800 p-6 rounded-2xl text-slate-400 dark:text-slate-500 font-medium flex flex-col items-center justify-center gap-2 h-full min-h-[200px] hover:border-brand-purple hover:text-brand-purple transition-colors bg-slate-50/50 dark:bg-slate-900/50"
+          >
+            <Target size={32} strokeWidth={1.5} />
+            <span className="text-sm font-bold uppercase tracking-wider">Creer un objectif</span>
+          </button>
+        </div>
       </div>
 
       <AjouterObjectif 

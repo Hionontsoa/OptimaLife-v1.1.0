@@ -40,7 +40,7 @@ export const AuthScreen = ({ onLogin }: { onLogin: (token: string, isDemo?: bool
         if (data.session) {
           onLogin(data.session.access_token, false);
         } else {
-          setSuccess('Inscription réussie ! Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.');
+          setSuccess('Inscription réussie ! Si vous ne recevez pas d\'e-mail, vérifiez vos spams ou désactivez "Confirm Email" dans votre dashboard Supabase.');
         }
       }
     } catch (err: any) {

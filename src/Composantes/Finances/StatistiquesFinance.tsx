@@ -8,13 +8,14 @@ import {
 } from 'recharts';
 import { X } from 'lucide-react';
 import { Card } from '../Communs/Card';
+import { CategoryStat } from '../../types';
 
 interface StatistiquesFinanceProps {
-  statsCategories: any[];
+  statsCategories: CategoryStat[];
   idCategorieFiltre: number | null;
   setIdCategorieFiltre: (id: number | null) => void;
-  categorieSurvolee: any;
-  setCategorieSurvolee: (cat: any) => void;
+  categorieSurvolee: CategoryStat | null;
+  setCategorieSurvolee: (cat: CategoryStat | null) => void;
   currency: string;
 }
 

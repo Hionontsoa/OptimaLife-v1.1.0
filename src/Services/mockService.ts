@@ -355,6 +355,45 @@ export const mockService = {
     return { id: 'demo-user', email: 'demo@optima.com', user_metadata: { full_name: 'Utilisateur Demo' } };
   },
 
+  async obtenirProfil() {
+    const user = await this.obtenirUtilisateur();
+    if (!user) return null;
+    return { 
+      id: user.id, 
+      full_name: user.user_metadata?.full_name || 'Utilisateur Demo', 
+      avatar_url: localStorage.getItem('demo_avatar_url') || '',
+      currency: localStorage.getItem('optima_currency') || '€' 
+    };
+  },
+
+  async mettreAJourProfil(misesAJour: any) {
+    if (misesAJour.currency) {
+      localStorage.setItem('optima_currency', misesAJour.currency);
+    }
+    if (misesAJour.full_name) {
+      const user = await this.obtenirUtilisateur();
+      if (user) {
+        user.user_metadata.full_name = misesAJour.full_name;
+      }
+    }
+    if (misesAJour.avatar_url) {
+      localStorage.setItem('demo_avatar_url', misesAJour.avatar_url);
+    }
+  },
+
+  async televerserAvatar(fichier: File) {
+    // Simulation d'upload en mode demo
+    return URL.createObjectURL(fichier);
+  },
+
+  // Realtime (Mock)
+  sabonnerAuxChangements(_table: string, _callback: (payload: any) => void) {
+    // En mode demo, on ne fait rien car les donnees sont locales et synchrones
+    return {
+      unsubscribe: () => {}
+    };
+  },
+
   async deconnexion() {
     localStorage.removeItem('optima_token');
     localStorage.removeItem('optima_demo');

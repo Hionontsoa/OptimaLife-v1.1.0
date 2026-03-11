@@ -34,7 +34,7 @@ export const ListeTransactions = ({
       (t.categories?.nom || '').toLowerCase().includes(recherche.toLowerCase())
     );
 
-  const transactionsGroupees = transactionsFiltrees.reduce((acc: any, t) => {
+  const transactionsGroupees = transactionsFiltrees.reduce((acc: Record<string, Transaction[]>, t) => {
     const dateStr = format(new Date(t.date), 'yyyy-MM-dd');
     if (!acc[dateStr]) acc[dateStr] = [];
     acc[dateStr].push(t);
@@ -92,8 +92,6 @@ export const ListeTransactions = ({
 };
 
 const TransactionCard = ({ t, currency, supprimerTransaction }: { t: Transaction, currency: string, supprimerTransaction: (id: number) => void }) => {
-  const [showConfirm, setShowConfirm] = useState(false);
-
   return (
     <motion.div
       layout
@@ -102,49 +100,35 @@ const TransactionCard = ({ t, currency, supprimerTransaction }: { t: Transaction
       exit={{ opacity: 0, scale: 0.95 }}
       className="relative group"
     >
-      <Card className="p-3 flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-3">
+      <Card className="p-3 flex items-center justify-between relative z-10 hover:shadow-md transition-shadow">
+        <div className="flex items-center gap-3 min-w-0">
           <TransactionIcon iconName={t.categories?.icon || t.categories?.icone || 'Wallet'} color={t.categories?.couleur || '#6366f1'} />
-          <div>
-            <p className="font-bold text-slate-800 dark:text-white text-sm leading-tight">{t.description || t.categories?.nom}</p>
+          <div className="min-w-0">
+            <p className="font-bold text-slate-800 dark:text-white text-sm leading-tight truncate">{t.description || t.categories?.nom}</p>
             <p className="text-slate-400 dark:text-slate-500 text-[10px] font-medium mt-0.5">{t.categories?.nom}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <p className={`font-black text-sm ${t.type === 'revenu' ? 'text-emerald-500' : 'text-slate-900 dark:text-slate-100'}`}>
+        <div className="flex items-center gap-4 shrink-0">
+          <p className={`font-black text-sm whitespace-nowrap ${t.type === 'revenu' ? 'text-emerald-500' : 'text-slate-900 dark:text-slate-100'}`}>
             {t.type === 'revenu' ? '+' : '-'}{t.montant.toLocaleString('fr-FR')} {currency}
           </p>
-          <button 
-            onClick={() => setShowConfirm(!showConfirm)}
-            className="p-2 text-slate-300 hover:text-slate-500 dark:text-slate-600 dark:hover:text-slate-400 transition-colors"
-          >
-            <MoreVertical size={16} />
-          </button>
+          <div className="flex items-center gap-1 border-l border-slate-100 dark:border-slate-800 pl-3">
+            <button 
+              className="p-2 text-slate-400 hover:text-brand-purple hover:bg-brand-purple/10 rounded-lg transition-colors"
+              title="Modifier"
+            >
+              <Edit2 size={14} />
+            </button>
+            <button 
+              onClick={() => supprimerTransaction(t.id)}
+              className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+              title="Supprimer"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
       </Card>
-
-      <AnimatePresence>
-        {showConfirm && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="absolute right-0 top-0 bottom-0 z-20 flex items-center pr-2"
-          >
-            <div className="bg-white dark:bg-slate-800 shadow-xl border border-slate-100 dark:border-slate-700 rounded-xl flex overflow-hidden">
-              <button className="p-3 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                <Edit2 size={16} />
-              </button>
-              <button 
-                onClick={() => supprimerTransaction(t.id)}
-                className="p-3 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };

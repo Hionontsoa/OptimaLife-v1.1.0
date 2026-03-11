@@ -19,7 +19,16 @@ export const Taches = () => {
   const [confirmerSuppression, setConfirmerSuppression] = useState<{ id: number } | null>(null);
 
   useEffect(() => {
-    getService().obtenirTaches().then(setTaches);
+    const chargerTaches = () => getService().obtenirTaches().then(setTaches);
+    chargerTaches();
+
+    const subscription = getService().sabonnerAuxChangements('taches', () => {
+      chargerTaches();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const basculerTache = async (id: number, terminee: boolean) => {
@@ -65,26 +74,32 @@ export const Taches = () => {
     <div className="pb-24">
       <Header title="Taches" subtitle="Restez organise au quotidien" />
       
-      <div className="px-6 space-y-4">
-        <AjouterTache 
-          nouvelleTache={nouvelleTache}
-          setNouvelleTache={setNouvelleTache}
-          ajouterTache={ajouterTache}
-          afficherRappel={afficherRappel}
-          setAfficherRappel={setAfficherRappel}
-          dateLimite={dateLimite}
-          setDateLimite={setDateLimite}
-          heureRappel={heureRappel}
-          setHeureRappel={setHeureRappel}
-          priorite={priorite}
-          setPriorite={setPriorite}
-        />
+      <div className="space-y-6 md:space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <AjouterTache 
+              nouvelleTache={nouvelleTache}
+              setNouvelleTache={setNouvelleTache}
+              ajouterTache={ajouterTache}
+              afficherRappel={afficherRappel}
+              setAfficherRappel={setAfficherRappel}
+              dateLimite={dateLimite}
+              setDateLimite={setDateLimite}
+              heureRappel={heureRappel}
+              setHeureRappel={setHeureRappel}
+              priorite={priorite}
+              setPriorite={setPriorite}
+            />
+          </div>
 
-        <ListeTaches 
-          taches={taches}
-          basculerTache={basculerTache}
-          setConfirmerSuppression={setConfirmerSuppression}
-        />
+          <div className="lg:col-span-2">
+            <ListeTaches 
+              taches={taches}
+              basculerTache={basculerTache}
+              setConfirmerSuppression={setConfirmerSuppression}
+            />
+          </div>
+        </div>
 
         <ConfirmModal 
           isOpen={!!confirmerSuppression}

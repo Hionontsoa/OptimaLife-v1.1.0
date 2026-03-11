@@ -2,12 +2,14 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card } from '../Communs/Card';
 
+import { Categorie, TransactionInput } from '../../types';
+
 interface FormulaireTransactionProps {
   afficherAjout: boolean;
   setAfficherAjout: (a: boolean) => void;
-  nouvelleTransac: any;
-  setNouvelleTransac: (t: any) => void;
-  categories: any[];
+  nouvelleTransac: TransactionInput;
+  setNouvelleTransac: (t: TransactionInput) => void;
+  categories: Categorie[];
   currency: string;
   gererAjout: () => void;
 }

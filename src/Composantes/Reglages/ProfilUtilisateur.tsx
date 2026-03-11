@@ -6,17 +6,21 @@ import { Card } from '../Communs/Card';
 interface ProfilUtilisateurProps {
   biometricEnabled: boolean;
   toggleBiometric: () => void;
+  onNavigate: (tab: string) => void;
 }
 
 /**
  * Composant affichant les informations de profil et les options de sécurité
  */
-export const ProfilUtilisateur = ({ biometricEnabled, toggleBiometric }: ProfilUtilisateurProps) => {
+export const ProfilUtilisateur = ({ biometricEnabled, toggleBiometric, onNavigate }: ProfilUtilisateurProps) => {
   return (
     <div className="space-y-2">
       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">Compte</h3>
       <Card className="p-0 overflow-hidden">
-        <button className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800">
+        <button 
+          onClick={() => onNavigate('profil')}
+          className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800"
+        >
           <div className="flex items-center gap-3">
             <div className="bg-brand-purple/10 dark:bg-brand-purple/20 p-2 rounded-xl text-brand-purple dark:text-brand-cyan">
               <Settings size={18} />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Calendar, Bell, CheckSquare, Trash2 } from 'lucide-react';
+import { Calendar, Bell, CheckSquare, Trash2, Edit2 } from 'lucide-react';
 import { Card } from '../Communs/Card';
 import { Tache } from '../../types';
 
@@ -43,17 +43,28 @@ export const ListeTaches = ({ taches, basculerTache, setConfirmerSuppression }: 
               )}
             </div>
           </div>
-          <div className={`w-2 h-2 rounded-full ${
-            tache.priorite === 'haute' ? 'bg-rose-500' : 
-            tache.priorite === 'moyenne' ? 'bg-amber-500' : 'bg-brand-cyan'
-          }`} />
-          
-          <button 
-            onClick={() => setConfirmerSuppression({ id: tache.id })}
-            className="absolute right-0 top-0 bottom-0 w-12 bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400 flex items-center justify-center translate-x-full group-hover:translate-x-0 transition-transform"
-          >
-            <Trash2 size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full shrink-0 ${
+              tache.priorite === 'haute' ? 'bg-rose-500' : 
+              tache.priorite === 'moyenne' ? 'bg-amber-500' : 'bg-brand-cyan'
+            }`} />
+            
+            <div className="flex items-center gap-1 ml-2 border-l border-slate-100 dark:border-slate-800 pl-2">
+              <button 
+                className="p-2 text-slate-400 hover:text-brand-purple hover:bg-brand-purple/10 rounded-lg transition-colors"
+                title="Modifier"
+              >
+                <Edit2 size={16} />
+              </button>
+              <button 
+                onClick={() => setConfirmerSuppression({ id: tache.id })}
+                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                title="Supprimer"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
         </Card>
       ))}
       {taches.length === 0 && (

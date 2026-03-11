@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Trash2, Search } from 'lucide-react';
+import { TrendingUp, TrendingDown, Trash2, Search, Edit2 } from 'lucide-react';
 import { Card } from '../Communs/Card';
 import { Investissement } from '../../types';
 
@@ -94,15 +94,24 @@ export const ListeActions = ({
               </div>
             </div>
             
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirmerSuppression({ id: inv.id });
-              }}
-              className="absolute right-3 top-3 w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
-            >
-              <Trash2 size={14} />
-            </button>
+            <div className="absolute right-3 top-3 flex items-center gap-1">
+              <button 
+                className="w-8 h-8 rounded-xl bg-white/80 dark:bg-slate-800/80 text-slate-400 hover:text-brand-purple hover:bg-white dark:hover:bg-slate-700 shadow-sm flex items-center justify-center transition-all"
+                title="Modifier"
+              >
+                <Edit2 size={14} />
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmerSuppression({ id: inv.id });
+                }}
+                className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400 flex items-center justify-center transition-all hover:bg-rose-500 hover:text-white shadow-sm"
+                title="Supprimer"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           </Card>
         );
       })}

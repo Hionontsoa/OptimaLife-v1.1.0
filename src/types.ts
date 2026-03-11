@@ -88,6 +88,38 @@ export type ActivityData = {
   depense: number;
 };
 
+export type CategoryStat = {
+  id: number;
+  name: string;
+  value: number;
+  color: string;
+  budget: number;
+};
+
+export type ReportData = {
+  summary: {
+    income: number;
+    expenses: number;
+    balance: number;
+    avgDaily: number;
+    periodName: string;
+  };
+  categoryDistribution: any[];
+  incomeCategoryDistribution: any[];
+  trends: any[];
+  topExpenses: Transaction[];
+  goals: {
+    completed: number;
+    inProgress: number;
+    avgProgress: number;
+  };
+  productivity: {
+    completed: number;
+    pending: number;
+    completionRate: number;
+  };
+};
+
 export type Transaction = {
   id: number;
   montant: number;
@@ -142,4 +174,26 @@ export type Investissement = {
   valeur_actuelle: number;
   type: string;
   date: string;
+};
+
+export type InvestmentInput = {
+  nom: string;
+  cout_acquisition: string;
+  valeur_actuelle: string;
+  type: string;
+};
+
+export type GoalInput = {
+  titre: string;
+  montant_cible: string;
+  date_limite: string;
+  icone: string;
+};
+
+export type TransactionInput = {
+  montant: string;
+  categorie_id: string;
+  description: string;
+  date: string;
+  type: 'revenu' | 'depense';
 };

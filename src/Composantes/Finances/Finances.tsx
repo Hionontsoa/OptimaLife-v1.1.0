@@ -8,7 +8,7 @@ import { FormulaireTransaction } from './FormulaireTransaction';
 import { ModalBudgets } from './ModalBudgets';
 import { useCurrency } from '../../Context/CurrencyContext';
 import { getService } from '../../Services/serviceFactory';
-import { Transaction, Categorie } from '../../types';
+import { Transaction, Categorie, CategoryStat, TransactionInput } from '../../types';
 
 /**
  * Page de gestion des finances
@@ -16,16 +16,16 @@ import { Transaction, Categorie } from '../../types';
 export const Finances = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Categorie[]>([]);
-  const [statsCategories, setStatsCategories] = useState<any[]>([]);
+  const [statsCategories, setStatsCategories] = useState<CategoryStat[]>([]);
   const [afficherAjout, setAfficherAjout] = useState(false);
   const [idCategorieFiltre, setIdCategorieFiltre] = useState<number | null>(null);
-  const [categorieSurvolee, setCategorieSurvolee] = useState<any>(null);
+  const [categorieSurvolee, setCategorieSurvolee] = useState<CategoryStat | null>(null);
   const [recherche, setRecherche] = useState('');
   const [afficherBudgets, setAfficherBudgets] = useState(false);
   const [categorieEnEdition, setCategorieEnEdition] = useState<Categorie | null>(null);
   const [nouveauBudget, setNouveauBudget] = useState('');
   const { currency } = useCurrency();
-  const [nouvelleTransac, setNouvelleTransac] = useState({ 
+  const [nouvelleTransac, setNouvelleTransac] = useState<TransactionInput>({ 
     montant: '', 
     categorie_id: '', 
     description: '', 
@@ -59,6 +59,14 @@ export const Finances = () => {
 
   useEffect(() => {
     recupererDonnees();
+
+    const subscription = getService().sabonnerAuxChangements('transactions', () => {
+      recupererDonnees();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const gererAjout = async () => {
@@ -112,31 +120,40 @@ export const Finances = () => {
     <div className="pb-24">
       <Header title="Finances" subtitle="Gerez vos revenus et depenses" />
       
-      <div className="px-6 space-y-4">
-        <button 
-          onClick={() => setAfficherBudgets(true)}
-          className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 border border-slate-200/50 dark:border-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-        >
-          <Settings size={18} /> Configurer les budgets
-        </button>
+      <div className="space-y-6 md:space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-lg font-bold text-slate-800 dark:text-white uppercase tracking-wider">Apercu Financier</h2>
+          <button 
+            onClick={() => setAfficherBudgets(true)}
+            className="w-full sm:w-auto bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 border border-slate-200/50 dark:border-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm"
+          >
+            <Settings size={16} /> Budgets
+          </button>
+        </div>
 
-        <StatistiquesFinance 
-          statsCategories={statsCategories}
-          idCategorieFiltre={idCategorieFiltre}
-          setIdCategorieFiltre={setIdCategorieFiltre}
-          categorieSurvolee={categorieSurvolee}
-          setCategorieSurvolee={setCategorieSurvolee}
-          currency={currency}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <StatistiquesFinance 
+              statsCategories={statsCategories}
+              idCategorieFiltre={idCategorieFiltre}
+              setIdCategorieFiltre={setIdCategorieFiltre}
+              categorieSurvolee={categorieSurvolee}
+              setCategorieSurvolee={setCategorieSurvolee}
+              currency={currency}
+            />
+          </div>
 
-        <ListeTransactions 
-          transactions={transactions}
-          recherche={recherche}
-          setRecherche={setRecherche}
-          idCategorieFiltre={idCategorieFiltre}
-          currency={currency}
-          supprimerTransaction={supprimerTransaction}
-        />
+          <div className="lg:col-span-2">
+            <ListeTransactions 
+              transactions={transactions}
+              recherche={recherche}
+              setRecherche={setRecherche}
+              idCategorieFiltre={idCategorieFiltre}
+              currency={currency}
+              supprimerTransaction={supprimerTransaction}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Bouton flottant d'ajout */}

@@ -34,14 +34,35 @@ export const supabaseService = {
     verifierSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     
+    // Si pas d'utilisateur, on retourne les categories par defaut (mode demo)
+    if (!user) {
+      return DEFAULT_CATEGORIES;
+    }
+
     const { data, error } = await supabase
       .from('categories')
       .select('*')
-      .or(`user_id.is.null,user_id.eq.${user?.id}`);
+      .eq('user_id', user.id);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Erreur lors de la recuperation des categories:', error);
+      return DEFAULT_CATEGORIES;
+    }
     
     if (data.length === 0) {
+      try {
+        await this.initialiserCategories();
+        const { data: retryData } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (retryData && retryData.length > 0) {
+          return retryData as Categorie[];
+        }
+      } catch (err) {
+        console.error('Erreur lors de l\'initialisation des categories:', err);
+      }
       return DEFAULT_CATEGORIES;
     }
     
@@ -61,16 +82,24 @@ export const supabaseService = {
     
     if (existant && existant.length > 0) return;
 
-    const categoriesAvecUtilisateur = DEFAULT_CATEGORIES.map(cat => ({
-      ...cat,
-      id: undefined,
+    // On ne garde que les champs necessaires pour la table Supabase
+    const categoriesAInserer = DEFAULT_CATEGORIES.map(cat => ({
+      nom: cat.nom,
+      type: cat.type,
+      icone: cat.icone,
+      couleur: cat.couleur,
+      montant_limite: cat.montant_limite || 0,
       user_id: user.id
     }));
 
     const { error } = await supabase
       .from('categories')
-      .insert(categoriesAvecUtilisateur);
-    if (error) throw error;
+      .insert(categoriesAInserer);
+    
+    if (error) {
+      console.error('Erreur insertion categories:', error);
+      throw error;
+    }
   },
 
   // Ajoute une nouvelle transaction
@@ -226,24 +255,32 @@ export const supabaseService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Non authentifie');
 
-    const { data: verifObjectif } = await supabase
+    // Verification de l'objectif
+    const { data: objectif, error: fetchError } = await supabase
       .from('objectifs')
-      .select('id')
+      .select('id, montant_actuel')
       .eq('id', contribution.objectif_id)
       .eq('user_id', user.id)
       .single();
     
-    if (!verifObjectif) throw new Error('Objectif non trouve ou acces refuse');
+    if (fetchError || !objectif) throw new Error('Objectif non trouve ou acces refuse');
 
-    const { data, error } = await supabase
+    // Insertion de la contribution
+    const { data, error: insertError } = await supabase
       .from('contributions')
-      .insert([contribution])
+      .insert([{ ...contribution, user_id: user.id }])
       .select();
-    if (error) throw error;
     
-    const { data: objectif } = await supabase.from('objectifs').select('montant_actuel').eq('id', contribution.objectif_id).single();
-    if (objectif) {
-      await supabase.from('objectifs').update({ montant_actuel: (objectif.montant_actuel || 0) + contribution.montant }).eq('id', contribution.objectif_id);
+    if (insertError) throw insertError;
+    
+    // Mise a jour du montant actuel de l'objectif
+    const { error: updateError } = await supabase
+      .from('objectifs')
+      .update({ montant_actuel: (objectif.montant_actuel || 0) + contribution.montant })
+      .eq('id', contribution.objectif_id);
+    
+    if (updateError) {
+      console.error('Erreur lors de la mise a jour de l\'objectif:', updateError);
     }
     
     return data[0];
@@ -294,6 +331,91 @@ export const supabaseService = {
     if (error) throw error;
   },
 
+  // --- Profil ---
+
+  // Recupere le profil de l'utilisateur
+  async obtenirProfil() {
+    verifierSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // Profil n'existe pas encore, on le cree
+        const nouveauProfil = {
+          id: user.id,
+          full_name: user.user_metadata?.full_name || 'Utilisateur',
+          avatar_url: user.user_metadata?.avatar_url || '',
+          currency: '€'
+        };
+        const { data: cree, error: errCree } = await supabase
+          .from('profiles')
+          .insert([nouveauProfil])
+          .select()
+          .single();
+        if (errCree) return nouveauProfil;
+        return cree;
+      }
+      console.error('Erreur lors de la recuperation du profil:', error);
+      return null;
+    }
+    return data;
+  },
+
+  // Met a jour le profil
+  async mettreAJourProfil(misesAJour: any) {
+    verifierSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Non authentifie');
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ ...misesAJour, updated_at: new Date().toISOString() })
+      .eq('id', user.id);
+    
+    if (error) throw error;
+  },
+
+  // Televerse un avatar dans le bucket 'avatars'
+  async televerserAvatar(fichier: File) {
+    verifierSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Non authentifie');
+
+    const extensionFichier = fichier.name.split('.').pop();
+    const nomFichier = `${user.id}-${Math.random()}.${extensionFichier}`;
+    const cheminFichier = `${nomFichier}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(cheminFichier, fichier);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(cheminFichier);
+
+    return publicUrl;
+  },
+
+  // --- Realtime ---
+
+  // S'abonne aux changements d'une table
+  sabonnerAuxChangements(table: string, callback: (payload: any) => void) {
+    verifierSupabase();
+    return supabase
+      .channel(`public:${table}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table }, callback)
+      .subscribe();
+  },
+
   // --- Resumes ---
   
   // Authentification
@@ -319,7 +441,8 @@ export const supabaseService = {
       balance: solde,
       income: revenus,
       expenses: depenses,
-      recentTransactions: transactions.slice(0, 5)
+      recentTransactions: transactions.slice(0, 5),
+      allTransactions: transactions // Ajoute pour eviter de re-fetcher dans Accueil
     };
   },
 
